@@ -38,6 +38,7 @@
 #include "drivers/barometer/barometer_bmp085.h"
 #include "drivers/barometer/barometer_bmp280.h"
 #include "drivers/barometer/barometer_bmp388.h"
+#include "drivers/barometer/barometer_bmp5xx.h"
 #include "drivers/barometer/barometer_dps310.h"
 #include "drivers/barometer/barometer_qmp6988.h"
 #include "drivers/barometer/barometer_virtual.h"
@@ -61,7 +62,9 @@
 
 baro_t baro;                        // barometer access functions
 
-PG_REGISTER_WITH_RESET_FN(barometerConfig_t, barometerConfig, PG_BAROMETER_CONFIG, 3);
+// PG version 4: Added BARO_BMP5XX=11, bumped BARO_VIRTUAL from 11 to 12
+// Old configs with BARO_VIRTUAL=11 will reset to defaults (auto-detect)
+PG_REGISTER_WITH_RESET_FN(barometerConfig_t, barometerConfig, PG_BAROMETER_CONFIG, 4);
 
 #ifndef DEFAULT_BARO_DEVICE
 #define DEFAULT_BARO_DEVICE BARO_DEFAULT
@@ -143,7 +146,7 @@ void pgResetFn_barometerConfig(barometerConfig_t *barometerConfig)
     barometerConfig->baro_spi_csn = IO_TAG(BARO_CS_PIN);
     barometerConfig->baro_i2c_device = I2C_DEV_TO_CFG(I2CINVALID);
     barometerConfig->baro_i2c_address = 0;
-#elif defined(DEFAULT_BARO_MS5611) || defined(DEFAULT_BARO_BMP388) || defined(DEFAULT_BARO_BMP280) || defined(DEFAULT_BARO_BMP085) ||defined(DEFAULT_BARO_QMP6988) || defined(DEFAULT_BARO_DPS310) || defined(DEFAULT_BARO_2SMBP_02B) || defined(USE_BARO_LPS22DF)
+#elif defined(DEFAULT_BARO_MS5611) || defined(DEFAULT_BARO_BMP388) || defined(DEFAULT_BARO_BMP280) || defined(DEFAULT_BARO_BMP085) || defined(DEFAULT_BARO_QMP6988) || defined(DEFAULT_BARO_DPS310) || defined(DEFAULT_BARO_2SMBP_02B) || defined(USE_BARO_LPS22DF) || defined(DEFAULT_BARO_BMP5XX)
     // All I2C devices shares a default config with address = 0 (per device default)
     barometerConfig->baro_busType = BUS_TYPE_I2C;
     barometerConfig->baro_i2c_device = I2C_DEV_TO_CFG(BARO_I2C_INSTANCE);
@@ -193,7 +196,7 @@ static bool baroDetect(baroDev_t *baroDev, baroSensor_e baroHardwareToUse)
 
     baroSensor_e baroHardware = baroHardwareToUse;
 
-#if !defined(USE_BARO_BMP085) && !defined(USE_BARO_MS5611) && !defined(USE_BARO_SPI_MS5611) && !defined(USE_BARO_BMP388) && !defined(USE_BARO_BMP280) && !defined(USE_BARO_SPI_BMP280)&& !defined(USE_BARO_QMP6988) && !defined(USE_BARO_SPI_QMP6988) && !defined(USE_BARO_DPS310) && !defined(USE_BARO_SPI_DPS310) && !defined(DEFAULT_BARO_SPI_2SMBP_02B) && !defined(DEFAULT_BARO_2SMBP_02B) && !defined(USE_BARO_LPS22DF)
+#if !defined(USE_BARO_BMP085) && !defined(USE_BARO_MS5611) && !defined(USE_BARO_SPI_MS5611) && !defined(USE_BARO_BMP388) && !defined(USE_BARO_SPI_BMP388) && !defined(USE_BARO_BMP280) && !defined(USE_BARO_SPI_BMP280) && !defined(USE_BARO_QMP6988) && !defined(USE_BARO_SPI_QMP6988) && !defined(USE_BARO_DPS310) && !defined(USE_BARO_SPI_DPS310) && !defined(DEFAULT_BARO_SPI_2SMBP_02B) && !defined(DEFAULT_BARO_2SMBP_02B) && !defined(USE_BARO_LPS22DF) && !defined(USE_BARO_BMP5XX) && !defined(USE_BARO_SPI_BMP5XX)
     UNUSED(dev);
 #endif
 
@@ -316,6 +319,20 @@ static bool baroDetect(baroDev_t *baroDev, baroSensor_e baroHardwareToUse)
         if (lps22dfDetect(baroDev)) {
             baroHardware = BARO_LPS22DF;
             break;
+        }
+#endif
+        FALLTHROUGH;
+
+    case BARO_BMP5XX:
+#if defined(USE_BARO_BMP5XX) || defined(USE_BARO_SPI_BMP5XX)
+        {
+            const bmp5xxConfig_t defaultBMP5XXConfig = {
+                .eocTag = barometerConfig()->baro_eoc_tag,
+            };
+            if (bmp5xxDetect(&defaultBMP5XXConfig, baroDev)) {
+                baroHardware = BARO_BMP5XX;
+                break;
+            }
         }
 #endif
         FALLTHROUGH;
