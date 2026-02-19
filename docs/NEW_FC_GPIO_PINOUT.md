@@ -83,7 +83,7 @@ vienai iš šių funkcijų per multiplekserį:
 | 29 | PA29 | **GYRO_CS** | GPIO | LSM6DSV Chip Select. Nors SPI1 CSn valid pinai yra 9,13,25,29,41 — CS dažnai valdomas kaip paprastas GPIO (ne hardware CS). GPIO 29 yra tarp SDI(28) ir SCK(30) — kompaktiškas layout. |
 | 30 | PA30 | **SPI1_SCK** | SPI1 CLK | LSM6DSV SPI laikrodis. SPI1 SCK valid pinai: **10, 14, 26, 30, 42**. GPIO 30 pasirinktas nes: (a) GPIO 10 naudojamas PIOUART0, (b) GPIO 14 naudojamas SERVO3, (c) 30 yra greta SDI(28) ir SDO(31). |
 | 31 | PA31 | **SPI1_SDO** | SPI1 TX | LSM6DSV MOSI (duomenys iš MCU → gyro). SPI1 TX valid pinai: **11, 15, 27, 31, 43**. GPIO 31 pasirinktas nes: (a) GPIO 11 naudojamas PIOUART0, (b) GPIO 15 naudojamas SERVO4, (c) 31 tęsia SPI1 bloką (28-31). |
-| 32 | PA32 | **I2C0_SDA** | I2C0 | Vidinė I2C magistralė — BMP580 + BMM150. I2C0 SDA valid: GPIO 0,4,8,12,16,20,24,28,**32**,36,40,44. GPIO 32 pasirinktas: (a) visi žemesni valid pinai jau užimti kitomis funkcijomis, (b) 32-33 yra RP2350B papildomi GPIO — tinka vidiniams komponentams. |
+| 32 | PA32 | **I2C0_SDA** | I2C0 | Vidinė I2C magistralė — BMP580 + BMM150 + INA226. I2C0 SDA valid: GPIO 0,4,8,12,16,20,24,28,**32**,36,40,44. GPIO 32 pasirinktas: (a) visi žemesni valid pinai jau užimti kitomis funkcijomis, (b) 32-33 yra RP2350B papildomi GPIO — tinka vidiniams komponentams. |
 | 33 | PA33 | **I2C0_SCL** | I2C0 | Vidinė I2C clock. I2C0 SCL valid: GPIO 1,5,9,13,17,21,25,29,**33**,37,41,45. 33 yra natūrali pora su SDA=32. |
 | 34 | PA34 | **SPI0_SCK** | SPI0 CLK | SD kortelės + FRAM SPI laikrodis. SPI0 SCK valid: GPIO 2,6,18,22,**34**,38,46. GPIO 34 pasirinktas: (a) žemesni pinai užimti (2=I2C1, 6=MOTOR1, 18=LED, 22=OSD), (b) 34-37 sudaro kompaktišką SPI0 bloką vidiniams komponentams. |
 | 35 | PA35 | **SPI0_SDO** | SPI0 TX | SD kortelės + FRAM MOSI. SPI0 TX valid: GPIO 3,7,19,23,**35**,39,47. GPIO 35: (a) 3=I2C1, 7=MOTOR2, 19=LED/spare, 23=LED_STRIP — visi užimti. |
@@ -92,7 +92,7 @@ vienai iš šių funkcijų per multiplekserį:
 | 38 | PA38 | **FRAM_CS** | GPIO | FRAM Chip Select. Atskirtas nuo SD CS — leidžia adresuoti FRAM nepriklausomai. GPIO 38 šalia SD CS (37) — abi CS linijos greta, patogu trasavimui. |
 | 39 | PA39 | **BARO_EOC** | GPIO/EXTI | BMP580 INT (data-ready). Opcionalus, bet rekomenduojamas — leidžia naudoti interrupt-driven barometo nuskaitymą vietoj polling. Pulsed mode, active HIGH, push-pull — nesukelia papildomo triukšmo I2C magistralėje. |
 | 40 | PA40 | **ADC_RSSI** | ADC | RSSI analoginis įėjimas. RP2350B ADC kanalai: GPIO 40-47. Pasirinktas 40 — natūrali ADC grupės pradžia. |
-| 41 | PA41 | **ADC_CURR** | ADC | Srovės jutiklio analoginis įėjimas. Šalia RSSI (40) — ADC grupė kartu. |
+| 41 | PA41 | **ADC_CURR** | ADC | Srovės jutiklio analoginis įėjimas. Šalia RSSI (40) — ADC grupė kartu. **Pastaba:** su INA226 šis pinas tampa neprivalomas (INA226 matuoja srovę per I2C). Galima naudoti kaip atsarginį ADC arba ACS712 analogini srovės jutiklį. |
 | 42 | PA42 | **ADC_EXT1** | ADC | Papildomas ADC kanalas (laisvas). Galimas panaudojimas: temperatūra, papildoma srovė. |
 | 43 | PA43 | **Spare ADC** | ADC/GPIO | Laisvas ADC/GPIO. Rezervuotas būsimam panaudojimui. |
 | 44 | PA44 | **ADC_VBAT** | ADC | Baterijos įtampos matavimas per įtampos daliklį. **KRITINIS** — betaflight naudoja VBAT LVC (Low Voltage Cutoff) apsaugai. Įtampos daliklis ant PCB: pvz., 100kΩ/10kΩ (11:1). |
@@ -311,7 +311,7 @@ RP2350B turi ADC kanalus ant GPIO 26-29 ir GPIO 40-47.
 | 28 | ADC2 | ~~Laisvas~~ | Naudojamas SPI1_SDI — ADC neprieinamas |
 | 29 | ADC3 | ~~Laisvas~~ | Naudojamas GYRO_CS — ADC neprieinamas |
 | 40 | ADC4 | **ADC_RSSI** | RSSI signalo stiprumas |
-| 41 | ADC5 | **ADC_CURR** | Srovės jutiklis (per ACS712 ar INA226) |
+| 41 | ADC5 | **ADC_CURR** | Atsarginis srovės jutiklis (INA226 yra pagrindinis per I2C0) |
 | 42 | ADC6 | **ADC_EXT1** | Papildomas (temperatūra, antra srovė, ...) |
 | 43 | ADC7 | **Spare** | Rezervuotas |
 | 44 | ADC8 | **ADC_VBAT** | Baterijos įtampa per daliklį |
@@ -481,7 +481,8 @@ Jie taip pat yra PIO2 GPIO bazės [0-31] arba [16-47] lange.
 2. **Motorų pinai (PA6-9):** Kuo arčiau krašto, trumpi takeliai prie ESC jungčių
 3. **Servo pinai (PA12-15):** Atskiroje eilėje nuo motorų — servo signalai yra 50Hz PWM, ne DSHOT
 4. **Gyro SPI (PA26-31):** Kuo trumpesni takeliai, 33Ω serijiniai rezistoriai
-5. **I2C0 (PA32-33):** Trumpi takeliai prie BMP580 ir BMM150, 4.7kΩ pull-up prie 3.3V
+5. **I2C0 (PA32-33):** Trumpi takeliai prie BMP580, BMM150 ir INA226, 4.7kΩ pull-up prie 3.3V
+6. **INA226 + Šuntas:** Šunto rezistorius (1mΩ) kuo arčiau INA226 IN+/IN- pinų. Kelvin jungimas. VS pinas jungtas prie baterijos (iki 36V), VDD prie 3.3V. 100nF dekuplingas.
 6. **SD+FRAM SPI (PA34-38):** Šalia vienas kito, trumpi SCK takeliai
 7. **OSD (PA20-22):** Toliau nuo motorų takelių, šalia video jungties
 8. **ADC (PA40-44):** Atskirtas nuo skaitmeninių signalų, RC filtras ant VBAT

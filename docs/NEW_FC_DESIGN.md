@@ -32,6 +32,7 @@ kortelę blackbox įrašymui ir FRAM greitam parametrų saugojimui.
 | 3.3V LDO #2 | **SK6019AD4-33** | — | MCU + kiti jutikliai |
 | 5V Buck | **TPSM33625RDNR** | — | 4.5–36V įėjimas (iki 8S), 2.5A |
 | OSD Sync | **LM393DR2G** | — | Komparatorius, ~€0.08 |
+| Srovės/Įtampos monitorius | **INA226** | I2C0 | TI high-side galios monitorius, 36V max bus (8S), 1mΩ šuntas |
 
 ---
 
@@ -63,6 +64,7 @@ kortelę blackbox įrašymui ir FRAM greitam parametrų saugojimui.
                                     │ GPIO 40-44 ── ADC (RSSI,I,V)  │
   ┌──────────████──────┐            │ GPIO 45    ── Status LED       │
   │ BMP580 + BMM150    │            │ GPIO 46-47 ── Spare            │
+  │ + INA226           │            │                                 │
   │ I2C0 (PA32-33)     ├──────────┤                                 │
   │ BMP580 INT → PA39  │           └─────────────────────────────────┘
   └────────────────────┘
@@ -148,6 +150,7 @@ Tik vienas įrenginys aktyvus vienu metu.
 |-----------|-------------|---------|
 | BMP580 | 0x47 (arba 0x46) | Barometras, INT → PA39 |
 | BMM150 | 0x10 (default) | Magnetometras, CSB → VDD |
+| INA226 | 0x40 (default) | Srovės/įtampos monitorius, A0=GND, A1=GND |
 
 ### I2C1 — Išoriniai jutikliai (jungtis)
 
@@ -166,7 +169,16 @@ Skirta GPS kompasui ar kitiems išoriniams jutikliams.
   Baterija (2S-8S)
   4.2V – 33.6V
        │
-       ├──[Įtampos daliklis]──→ ADC_VBAT (PA44)
+       ├──[Įtampos daliklis]──→ ADC_VBAT (PA44) ← atsarginis
+       │
+       ├──[R_SHUNT 1mΩ]──┐
+       │                  ▼
+       │         ┌────────────────┐
+       │         │    INA226      │
+       │         │  I2C0 (0x40)   │──→ Srovė (mA) + Įtampa (mV) + Galia (mW)
+       │         │  max 36V bus   │
+       │         │  ±81.92mV šunt │
+       │         └────────────────┘
        │
        ▼
   ┌─────────────────────┐
@@ -220,6 +232,7 @@ Skirta GPS kompasui ar kitiems išoriniams jutikliams.
 | SD Card | `bus_spi_pico.c` | `USE_SDCARD_SPI` | SPI režimu |
 | Servo PWM | `pwm_servo_pico.c` | `USE_SERVOS` | Hardware PWM, 50Hz |
 | PIO UART | `serial_uart_pico.c` | `USE_PIOUART0/1` | Software UART per PIO1 |
+| INA226 | `ina226.c` | `USE_CURRENT_METER_INA226` | I2C srovės/įtampos monitorius, 36V max |
 
 ### Reikia rašyti
 
@@ -262,6 +275,14 @@ Nauji define'ai, kuriuos reikės pridėti:
 #define USE_MAG_BMM150
 #define MAG_I2C_INSTANCE     I2CDEV_0
 
+// Srovės/Įtampos monitorius (INA226 ant I2C0)
+#define USE_CURRENT_METER_INA226
+#define DEFAULT_VOLTAGE_METER_SOURCE   VOLTAGE_METER_INA226
+#define DEFAULT_CURRENT_METER_SOURCE   CURRENT_METER_INA226
+// CLI parametrai: ina226_i2c_device, ina226_address, ina226_shunt_resistance,
+//                 ina226_max_expected_current, ina226_vbat_scale
+// Default: I2CDEV_0, 0x40, 1mΩ (1000µΩ), 50A (50000mA), scale=100
+
 // Servo (4 kanalai)
 #define USE_SERVOS
 #define SERVO1_PIN           PA12
@@ -289,6 +310,7 @@ Nauji define'ai, kuriuos reikės pridėti:
 8. **OSD signalai:** PA20-22 vedami kartu, toliau nuo motorų PWM
 9. **SD kortelė:** 100nF prie SD VDD, ESD apsauga jei yra vietos
 10. **FRAM:** Šalia SD kortelės (dalijasi SPI0 magistrale)
+11. **INA226 + Šuntas:** Šunto rezistorius (1mΩ) kuo arčiau INA226 IN+/IN- pinų. Kelvin jungimas (4 laidai). INA226 maitinimas iš MCU 3.3V LDO (VS pin gali būti jungtas tiesiai prie baterijos, iki 36V). 100nF dekuplingas prie VS ir VDD.
 
 ---
 
@@ -301,4 +323,5 @@ Nauji define'ai, kuriuos reikės pridėti:
 5. ☐ Parašyti BMM150 draiveri
 6. ☐ Adaptuoti FRAM draiveri
 7. ☐ Sukurti naują config.h target
-8. ☐ Testavimas ir kalibravimas
+8. ☐ Įjungti INA226 (`USE_CURRENT_METER_INA226`) ir konfigūruoti šunto vertę
+9. ☐ Testavimas ir kalibravimas
