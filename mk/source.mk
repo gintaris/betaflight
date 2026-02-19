@@ -313,6 +313,7 @@ COMMON_SRC += \
             drivers/barometer/barometer_bmp085.c \
             drivers/barometer/barometer_bmp280.c \
             drivers/barometer/barometer_bmp388.c \
+            drivers/barometer/barometer_bmp5xx.c \
             drivers/barometer/barometer_dps310.c \
             drivers/barometer/barometer_lps22df.c \
             drivers/barometer/barometer_lps.c \
@@ -325,9 +326,11 @@ COMMON_SRC += \
             drivers/compass/compass_ist8310.c \
             drivers/compass/compass_lis2mdl.c \
             drivers/compass/compass_lis3mdl.c \
+            drivers/compass/compass_mmc560x.c \
             drivers/compass/compass_mpu925x_ak8963.c \
             drivers/compass/compass_qmc5883.c \
             drivers/compass/compass_virtual.c \
+            drivers/ina226.c \
             drivers/max7456.c \
             drivers/vtx_rtc6705.c \
             drivers/vtx_rtc6705_soft_spi.c
@@ -396,6 +399,7 @@ SIZE_OPTIMISED_SRC += \
             drivers/compass/compass_qmc5883.c \
             drivers/compass/compass_lis2mdl.c \
             drivers/compass/compass_lis3mdl.c \
+            drivers/compass/compass_mmc560x.c \
             drivers/compass/compass_ist8310.c \
             drivers/display_ug2864hsweg01.c \
             drivers/vtx_rtc6705_soft_spi.c \

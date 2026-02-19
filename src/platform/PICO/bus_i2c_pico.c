@@ -134,17 +134,24 @@ uint16_t i2cGetErrorCounter(void)
 
 bool i2cWrite(i2cDevice_e device, uint8_t addr, uint8_t reg, uint8_t data)
 {
+    // Clear any previous error state
+    if (device < I2CDEV_COUNT) {
+        i2c_contexts[device].intr_error_stat = 0;
+    }
+
     // Start non-blocking write
     if (!i2cWriteBuffer(device, addr, reg, 1, &data)) {
         return false;
     }
 
     // Wait for completion
-    while (i2cBusy(device, NULL)) {
+    bool error = false;
+    while (i2cBusy(device, &error)) {
         // Wait until transfer is complete
     }
 
-    return true;
+    // Check if transfer completed with error (e.g., NACK from device)
+    return !error;
 }
 
 bool i2cWriteBuffer(i2cDevice_e device, uint8_t addr, uint8_t reg, uint8_t len, uint8_t *data)
@@ -202,17 +209,24 @@ bool i2cWriteBuffer(i2cDevice_e device, uint8_t addr, uint8_t reg, uint8_t len, 
 
 bool i2cRead(i2cDevice_e device, uint8_t addr, uint8_t reg, uint8_t len, uint8_t* buf)
 {
+    // Clear any previous error state
+    if (device < I2CDEV_COUNT) {
+        i2c_contexts[device].intr_error_stat = 0;
+    }
+
     // Start non-blocking read
     if (!i2cReadBuffer(device, addr, reg, len, buf)) {
         return false;
     }
 
     // Wait for completion
-    while (i2cBusy(device, NULL)) {
+    bool error = false;
+    while (i2cBusy(device, &error)) {
         // Wait until transfer is complete
     }
 
-    return true;
+    // Check if transfer completed with error (e.g., NACK from device)
+    return !error;
 }
 
 static void i2c_load_read_commands(i2c_hw_t *hw, uint8_t len, bool final_batch)
@@ -315,14 +329,18 @@ bool i2cBusy(i2cDevice_e device, bool *error)
         return false;
     }
 
-    if (error) {
-        *error = 0;
-    }
-
     // Check if we have a transfer in progress via our state machine
     i2c_context_t *context = &i2c_contexts[device];
     if (context->state != I2C_STATE_IDLE) {
+        if (error) {
+            *error = false;  // Transfer still in progress, no error yet
+        }
         return true;
+    }
+
+    // Transfer complete - check if there was an error
+    if (error) {
+        *error = (context->intr_error_stat != 0);
     }
 
     // Also check hardware status

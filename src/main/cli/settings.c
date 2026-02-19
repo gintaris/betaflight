@@ -127,6 +127,7 @@
 #include "sensors/battery.h"
 #include "sensors/boardalignment.h"
 #include "sensors/compass.h"
+#include "sensors/current.h"
 #include "sensors/esc_sensor.h"
 #include "sensors/gyro.h"
 #include "sensors/rangefinder.h"
@@ -213,6 +214,8 @@ const char * const lookupTableBaroHardware[BARO_HARDWARE_COUNT] = {
     [BARO_DPS310] = "DPS310",
     [BARO_2SMPB_02B] = "2SMPB_02B",
     [BARO_LPS22DF] = "LPS22DF",
+    [BARO_BMP580] = "BMP580",
+    [BARO_BMP581] = "BMP581",
     [BARO_VIRTUAL] = "VIRTUAL"
 };
 
@@ -227,7 +230,8 @@ const char * const lookupTableMagHardware[MAG_HARDWARE_COUNT] = {
     [MAG_LIS2MDL] = "LIS2MDL",
     [MAG_LIS3MDL] = "LIS3MDL",
     [MAG_MPU925X_AK8963] = "MPU925X_AK8963",
-    [MAG_IST8310] = "IST8310"
+    [MAG_IST8310] = "IST8310",
+    [MAG_MMC560X] = "MMC560X"
 };
 
 // sync with rangefinderType_e
@@ -1076,6 +1080,14 @@ const clivalue_t valueTable[] = {
 #ifdef USE_VIRTUAL_CURRENT_METER
     { "ibatv_scale",                VAR_INT16  | MASTER_VALUE, .config.minmax = { -16000, 16000 }, PG_CURRENT_SENSOR_VIRTUAL_CONFIG, offsetof(currentSensorVirtualConfig_t, scale) },
     { "ibatv_offset",               VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 16000 }, PG_CURRENT_SENSOR_VIRTUAL_CONFIG, offsetof(currentSensorVirtualConfig_t, offset) },
+#endif
+#ifdef USE_CURRENT_METER_INA226
+// PG_CURRENT_SENSOR_INA226_CONFIG
+    { "ina226_i2c_device",          VAR_UINT8  | HARDWARE_VALUE, .config.minmaxUnsigned = { 0, I2CDEV_COUNT }, PG_CURRENT_SENSOR_INA226_CONFIG, offsetof(currentSensorINA226Config_t, i2cDevice) },
+    { "ina226_address",             VAR_UINT8  | HARDWARE_VALUE, .config.minmaxUnsigned = { 0x40, 0x4F }, PG_CURRENT_SENSOR_INA226_CONFIG, offsetof(currentSensorINA226Config_t, address) },
+    { "ina226_shunt_uohm",          VAR_UINT16 | HARDWARE_VALUE, .config.minmaxUnsigned = { 100, 65535 }, PG_CURRENT_SENSOR_INA226_CONFIG, offsetof(currentSensorINA226Config_t, shuntResistanceMicroOhms) },
+    { "ina226_max_current",         VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 1000, 65535 }, PG_CURRENT_SENSOR_INA226_CONFIG, offsetof(currentSensorINA226Config_t, maxExpectedCurrentMa) },
+    { "ina226_vbat_scale",          VAR_UINT8  | HARDWARE_VALUE, .config.minmaxUnsigned = { 50, 150 }, PG_CURRENT_SENSOR_INA226_CONFIG, offsetof(currentSensorINA226Config_t, vbatScale) },
 #endif
 #ifdef USE_BATTERY_CONTINUE
     { "battery_continue",           VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_BATTERY_CONFIG, offsetof(batteryConfig_t, isBatteryContinueEnabled) },
