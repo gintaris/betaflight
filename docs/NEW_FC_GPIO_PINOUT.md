@@ -69,7 +69,7 @@ vienai iš šių funkcijų per multiplekserį:
 | 20 | PA20 | **OSD_W_PIN** | PIO2 | 10A | OSD pikselių išvestis (baltas/juodas). **PRIVALOMA:** 3 gretimi pinai OSD. PIO2 bazė=0 arba 16 — GPIO 20-22 telpa abiejuose languose. |
 | 21 | PA21 | **OSD_EN_PIN** | PIO2 | 10B | OSD perdengimo aktyvavimas. Turi būti W_PIN+1. |
 | 22 | PA22 | **OSD_SYNC_PIN** | PIO2 | 11A | OSD sync įėjimas (iš LM393). Turi būti W_PIN+2. |
-| 23 | PA23 | **LED_STRIP** | PIO2 | 11B | WS2812 RGB LED juosta. PIO2 (ta pati kaip OSD) — dalijasi PIO2 bloku, bet naudoja atskirą SM. GPIO 23 yra tame pačiame PIO2 bazės lange kaip OSD pinai (20-22). |
+| 23 | PA23 | **Spare** | GPIO | 11B | Laisvas GPIO. Anksčiau planuotas LED Strip — nebereikalingas. Galimas panaudojimas: papildomas PINIO, test point, debug. |
 | 24 | PA24 | **PINIO1** | GPIO | 0A* | Buzzer / VTX maitinimo valdymas. Paprastas GPIO išėjimas. *PWM slice 0 perrašo su GPIO 0 — nesvarbu, nes PINIO naudoja GPIO, ne PWM. |
 | 25 | PA25 | **PINIO2** | GPIO | 0B* | Laisvas GPIO / vartotojo funkcija. Galimas panaudojimas: kameros perjungimas, apšvietimas. |
 
@@ -83,10 +83,10 @@ vienai iš šių funkcijų per multiplekserį:
 | 29 | PA29 | **GYRO_CS** | GPIO | LSM6DSV Chip Select. Nors SPI1 CSn valid pinai yra 9,13,25,29,41 — CS dažnai valdomas kaip paprastas GPIO (ne hardware CS). GPIO 29 yra tarp SDI(28) ir SCK(30) — kompaktiškas layout. |
 | 30 | PA30 | **SPI1_SCK** | SPI1 CLK | LSM6DSV SPI laikrodis. SPI1 SCK valid pinai: **10, 14, 26, 30, 42**. GPIO 30 pasirinktas nes: (a) GPIO 10 naudojamas PIOUART0, (b) GPIO 14 naudojamas SERVO3, (c) 30 yra greta SDI(28) ir SDO(31). |
 | 31 | PA31 | **SPI1_SDO** | SPI1 TX | LSM6DSV MOSI (duomenys iš MCU → gyro). SPI1 TX valid pinai: **11, 15, 27, 31, 43**. GPIO 31 pasirinktas nes: (a) GPIO 11 naudojamas PIOUART0, (b) GPIO 15 naudojamas SERVO4, (c) 31 tęsia SPI1 bloką (28-31). |
-| 32 | PA32 | **I2C0_SDA** | I2C0 | Vidinė I2C magistralė — BMP580 + BMM150 + INA226. I2C0 SDA valid: GPIO 0,4,8,12,16,20,24,28,**32**,36,40,44. GPIO 32 pasirinktas: (a) visi žemesni valid pinai jau užimti kitomis funkcijomis, (b) 32-33 yra RP2350B papildomi GPIO — tinka vidiniams komponentams. |
+| 32 | PA32 | **I2C0_SDA** | I2C0 | Vidinė I2C magistralė — BMP580 + BMM150 (+ INA226 jei ant FC). I2C0 SDA valid: GPIO 0,4,8,12,16,20,24,28,**32**,36,40,44. GPIO 32 pasirinktas: (a) visi žemesni valid pinai jau užimti kitomis funkcijomis, (b) 32-33 yra RP2350B papildomi GPIO — tinka vidiniams komponentams. |
 | 33 | PA33 | **I2C0_SCL** | I2C0 | Vidinė I2C clock. I2C0 SCL valid: GPIO 1,5,9,13,17,21,25,29,**33**,37,41,45. 33 yra natūrali pora su SDA=32. |
 | 34 | PA34 | **SPI0_SCK** | SPI0 CLK | SD kortelės + FRAM SPI laikrodis. SPI0 SCK valid: GPIO 2,6,18,22,**34**,38,46. GPIO 34 pasirinktas: (a) žemesni pinai užimti (2=I2C1, 6=MOTOR1, 18=LED, 22=OSD), (b) 34-37 sudaro kompaktišką SPI0 bloką vidiniams komponentams. |
-| 35 | PA35 | **SPI0_SDO** | SPI0 TX | SD kortelės + FRAM MOSI. SPI0 TX valid: GPIO 3,7,19,23,**35**,39,47. GPIO 35: (a) 3=I2C1, 7=MOTOR2, 19=LED/spare, 23=LED_STRIP — visi užimti. |
+| 35 | PA35 | **SPI0_SDO** | SPI0 TX | SD kortelės + FRAM MOSI. SPI0 TX valid: GPIO 3,7,19,23,**35**,39,47. GPIO 35: (a) 3=I2C1, 7=MOTOR2, 19=LED/spare, 23=spare — daugelis užimti. |
 | 36 | PA36 | **SPI0_SDI** | SPI0 RX | SD kortelės + FRAM MISO. SPI0 RX valid: GPIO 0,4,16,20,**36**,44. GPIO 36: (a) 0=UART0, 4=UART1, 16=PIOUART1, 20=OSD — visi užimti. |
 | 37 | PA37 | **SDCARD_CS** | GPIO | SD kortelės Chip Select. Bet kuris laisvas GPIO tinka. Pasirinktas 37 — šalia SPI0 linijų (34-36), trumpas takelis PCB. |
 | 38 | PA38 | **FRAM_CS** | GPIO | FRAM Chip Select. Atskirtas nuo SD CS — leidžia adresuoti FRAM nepriklausomai. GPIO 38 šalia SD CS (37) — abi CS linijos greta, patogu trasavimui. |
@@ -97,7 +97,7 @@ vienai iš šių funkcijų per multiplekserį:
 | 43 | PA43 | **Spare ADC** | ADC/GPIO | Laisvas ADC/GPIO. Rezervuotas būsimam panaudojimui. |
 | 44 | PA44 | **ADC_VBAT** | ADC | Baterijos įtampos matavimas per įtampos daliklį. **KRITINIS** — betaflight naudoja VBAT LVC (Low Voltage Cutoff) apsaugai. Įtampos daliklis ant PCB: pvz., 100kΩ/10kΩ (11:1). |
 | 45 | PA45 | **LED0** (board) | GPIO | Plokštės būsenos šviesos diodas. Gali būti naudojamas vietoje PA18 arba kartu. Ant aukštų GPIO — arčiau MCU pakuotės. |
-| 46 | PA46 | **Spare** | GPIO | Laisvas GPIO. Galimas panaudojimas: papildomas LED strip, test point. |
+| 46 | PA46 | **Spare** | GPIO | Laisvas GPIO. Galimas panaudojimas: test point, debug. |
 | 47 | PA47 | **Spare** | GPIO | Laisvas GPIO. Galimas panaudojimas: test point, debug. |
 
 ---
@@ -142,7 +142,7 @@ o servo liktų ant slices 6-7 — vis tiek nekonliktuoja.
 | 8 | PA16 (PIOUART1) | PA17 (PIOUART1) | Nepanaudotas (PIO UART) | — |
 | 9 | PA18 (LED0) | PA19 (LED1) | Nepanaudotas (GPIO) | — |
 | 10 | PA20 (OSD_W) | PA21 (OSD_EN) | Nepanaudotas (PIO2) | — |
-| 11 | PA22 (OSD_SYNC) | PA23 (LED_STRIP) | Nepanaudotas (PIO2) | — |
+| 11 | PA22 (OSD_SYNC) | PA23 (Spare) | Nepanaudotas | — |
 
 **Išvada:** Servo slices 6-7 yra visiškai izoliuoti — jokio konflikto su jokia
 kita funkcija.
@@ -176,16 +176,16 @@ kita funkcija.
 **GPIO Bazė:** 0 (GPIO langas 0-31)  
 **Pastaba:** Visos 4 SM panaudotos — daugiau PIO UART pridėti negalima.
 
-### PIO2 — OSD + LED Strip
+### PIO2 — OSD
 
 | SM | GPIO | Funkcija | Pastaba |
 |----|------|----------|---------|
 | SM0 | PA20-22 | OSD (W, EN, SYNC) | 3 gretimi pinai privalomi |
-| SM1 | PA23 | LED Strip (WS2812) | |
+| SM1 | — | Laisva | |
 | SM2 | — | Laisva | |
 | SM3 | — | Laisva | |
 
-**GPIO Bazė:** 0 arba 16 (abu tinka, nes GPIO 20-23 ∈ [0-31] IR [16-47])
+**GPIO Bazė:** 0 arba 16 (abu tinka, nes GPIO 20-22 ∈ [0-31] IR [16-47])
 
 ---
 
@@ -206,7 +206,8 @@ RP2350B SPI pin multiplekseris leidžia tik **specifines GPIO** kombinacijas:
 - GPIO 2,3: I2C1
 - GPIO 6,7: DSHOT motorai
 - GPIO 18,19: LED / spare
-- GPIO 22,23: OSD / LED strip
+- GPIO 22: OSD
+- GPIO 23: Spare
 - GPIO 0,4,16,20: UART / PIO / OSD
 - GPIO 32: I2C0 SDA
 
@@ -383,10 +384,10 @@ nėra, nes PWM slice 0 neaktyvuotas nei vienai porai.
 
 ### 2. PIO2 Instrukcijų Atminties Limitas
 
-**Problema:** PIO2 naudojamas ir OSD, ir LED Strip. Kiekvienas PIO blokas turi
+**Problema:** PIO2 naudojamas OSD. Kiekvienas PIO blokas turi
 tik 32 instrukcijų vietas.  
-**Sprendimas:** OSD programa užima ~15 instrukcijų, LED Strip (WS2812) ~10
-instrukcijų. Bendrai ~25/32 — telpa.
+**Sprendimas:** OSD programa užima ~15 instrukcijų — likę 17 instrukcijų
+laisvi ateičiai. LED Strip pašalintas — nebereikalingas.
 
 ### 3. SPI0 Bus Contention (SD + FRAM)
 
@@ -438,7 +439,7 @@ Jie taip pat yra PIO2 GPIO bazės [0-31] arba [16-47] lange.
         PA20  (OSD_W_PIN   ) ─┤21             60├─ PA27 (GYRO_EXTI)
         PA21  (OSD_EN_PIN  ) ─┤22             59├─ PA26 (GYRO_CLKIN)
         PA22  (OSD_SYNC_PIN) ─┤23             58├─          ...
-        PA23  (LED_STRIP   ) ─┤24             57├─
+        PA23  (Spare       ) ─┤24             57├─
         PA24  (PINIO1      ) ─┤25             56├─
         PA25  (PINIO2      ) ─┤26             55├─
                     ...       ─┤..             ..├─
@@ -464,12 +465,11 @@ Jie taip pat yra PIO2 GPIO bazės [0-31] arba [16-47] lange.
 | I2C (vidinis) | 1 | PA32-33 | I2C0 |
 | I2C (išorinis) | 1 | PA2-3 | I2C1 |
 | OSD | 1 | PA20-22 | PIO2 |
-| LED Strip | 1 | PA23 | PIO2 |
 | ADC | 4+ | PA40-44 | ADC |
 | PINIO | 2 | PA24-25 | GPIO |
 | LED | 2 | PA18, PA45 | GPIO |
-| **Panaudoti GPIO** | **38** | | |
-| **Laisvi GPIO** | **10** | PA19, PA26*, PA39*, PA42-43, PA45-47 | |
+| **Panaudoti GPIO** | **37** | | |
+| **Laisvi GPIO** | **11** | PA19, PA23, PA26*, PA39*, PA42-43, PA45-47 | |
 
 *PA26 ir PA39 priskirti, bet opcionalūs (CLKIN ir BARO_EOC)
 
@@ -481,8 +481,8 @@ Jie taip pat yra PIO2 GPIO bazės [0-31] arba [16-47] lange.
 2. **Motorų pinai (PA6-9):** Kuo arčiau krašto, trumpi takeliai prie ESC jungčių
 3. **Servo pinai (PA12-15):** Atskiroje eilėje nuo motorų — servo signalai yra 50Hz PWM, ne DSHOT
 4. **Gyro SPI (PA26-31):** Kuo trumpesni takeliai, 33Ω serijiniai rezistoriai
-5. **I2C0 (PA32-33):** Trumpi takeliai prie BMP580, BMM150 ir INA226, 4.7kΩ pull-up prie 3.3V
-6. **INA226 + Šuntas:** Šunto rezistorius (1mΩ) kuo arčiau INA226 IN+/IN- pinų. Kelvin jungimas. VS pinas jungtas prie baterijos (iki 36V), VDD prie 3.3V. 100nF dekuplingas.
-6. **SD+FRAM SPI (PA34-38):** Šalia vienas kito, trumpi SCK takeliai
-7. **OSD (PA20-22):** Toliau nuo motorų takelių, šalia video jungties
-8. **ADC (PA40-44):** Atskirtas nuo skaitmeninių signalų, RC filtras ant VBAT
+5. **I2C0 (PA32-33):** Trumpi takeliai prie BMP580 ir BMM150, 4.7kΩ pull-up prie 3.3V
+6. **INA226 + Šuntas:** Jei ant FC — šunto rezistorius (1mΩ) kuo arčiau INA226, Kelvin jungimas, I2C0 magistralė. Jei ant PDB — jungiasi per I2C1 (PA2-PA3) kabelį.
+7. **SD+FRAM SPI (PA34-38):** Šalia vienas kito, trumpi SCK takeliai
+8. **OSD (PA20-22):** Toliau nuo motorų takelių, šalia video jungties
+9. **ADC (PA40-44):** Atskirtas nuo skaitmeninių signalų, RC filtras ant VBAT

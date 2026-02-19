@@ -32,7 +32,7 @@ kortelę blackbox įrašymui ir FRAM greitam parametrų saugojimui.
 | 3.3V LDO #2 | **SK6019AD4-33** | — | MCU + kiti jutikliai |
 | 5V Buck | **TPSM33625RDNR** | — | 4.5–36V įėjimas (iki 8S), 2.5A |
 | OSD Sync | **LM393DR2G** | — | Komparatorius, ~€0.08 |
-| Srovės/Įtampos monitorius | **INA226** | I2C0 | TI high-side galios monitorius, 36V max bus (8S), 1mΩ šuntas |
+| Srovės/Įtampos monitorius | **INA226** | I2C0 arba I2C1 | TI high-side galios monitorius, 36V max bus (8S), 1mΩ šuntas. **Neapsispręsta:** gali būti ant FC (I2C0) arba ant atskiros PDB plokštės (I2C1). |
 
 ---
 
@@ -64,10 +64,14 @@ kortelę blackbox įrašymui ir FRAM greitam parametrų saugojimui.
                                     │ GPIO 40-44 ── ADC (RSSI,I,V)  │
   ┌──────────████──────┐            │ GPIO 45    ── Status LED       │
   │ BMP580 + BMM150    │            │ GPIO 46-47 ── Spare            │
-  │ + INA226           │            │                                 │
   │ I2C0 (PA32-33)     ├──────────┤                                 │
   │ BMP580 INT → PA39  │           └─────────────────────────────────┘
   └────────────────────┘
+
+  ┌──────────┐                      ┌─────────────────────┐
+  │ INA226   │  I2C0 arba I2C1      │ Ant FC arba PDB     │
+  │ (0x40)   ├──────────────────────┤ Neapsispręsta       │
+  └──────────┘                      └─────────────────────┘
 
   ┌──────────┐   SPI0 (PA34-37)
   │ microSD  ├───────────────── CS = PA37
@@ -88,7 +92,7 @@ instrukcijų atmintimi.
 |------------|----------|-------------|----------|
 | **PIO0** | DSHOT600 motorams | 4 SM (po 1 motorui) | Max 4 motorai. 13 arba 29 instr. |
 | **PIO1** | Software UART | 2-4 SM (TX+RX × 2) | PIOUART0 + PIOUART1 |
-| **PIO2** | OSD + LED Strip | 1-2 SM | OSD = 1 SM, LED = 1 SM |
+| **PIO2** | OSD | 1 SM | OSD = 1 SM |
 
 ### PIO GPIO Bazė
 
@@ -98,7 +102,7 @@ Kiekvienas PIO blokas gali pasiekti 32 GPIO langą nuo bazės 0 arba 16:
 |-----|------|-----------------|-------------------|
 | PIO0 | 0 | GPIO 0-31 | Motorai (6-9) ✓ |
 | PIO1 | 0 | GPIO 0-31 | PIOUART0 (10-11), PIOUART1 (16-17) ✓ |
-| PIO2 | 0 arba 16 | GPIO 0-31 arba 16-47 | OSD (20-22), LED Strip (23) ✓ |
+| PIO2 | 0 arba 16 | GPIO 0-31 arba 16-47 | OSD (20-22) ✓ |
 
 ---
 
@@ -150,7 +154,7 @@ Tik vienas įrenginys aktyvus vienu metu.
 |-----------|-------------|---------|
 | BMP580 | 0x47 (arba 0x46) | Barometras, INT → PA39 |
 | BMM150 | 0x10 (default) | Magnetometras, CSB → VDD |
-| INA226 | 0x40 (default) | Srovės/įtampos monitorius, A0=GND, A1=GND |
+| INA226 | 0x40 (default) | Srovės/įtampos monitorius — **tik jei ant FC plokštės** |
 
 ### I2C1 — Išoriniai jutikliai (jungtis)
 
@@ -158,6 +162,10 @@ Tik vienas įrenginys aktyvus vienu metu.
 |----------|------|---------|
 | SDA | PA2 | I2C1 SDA valid pin |
 | SCL | PA3 | I2C1 SCL valid pin |
+
+**Pastaba:** INA226 gali būti prijungtas prie I2C1 vietoje I2C0, jei jis bus
+ant atskiros PDB (Power Distribution Board) plokštės. Tokiu atveju INA226
+jungiasi per išorinę I2C1 jungtį (PA2-PA3) kartu su GPS kompasu.
 
 Skirta GPS kompasui ar kitiems išoriniams jutikliams.
 
@@ -275,7 +283,10 @@ Nauji define'ai, kuriuos reikės pridėti:
 #define USE_MAG_BMM150
 #define MAG_I2C_INSTANCE     I2CDEV_0
 
-// Srovės/Įtampos monitorius (INA226 ant I2C0)
+// Srovės/Įtampos monitorius (INA226)
+// PASTABA: I2C magistralė dar neapsispręsta:
+//   - I2C0 (I2CDEV_0) — jei INA226 ant FC plokštės
+//   - I2C1 (I2CDEV_1) — jei INA226 ant atskiros PDB plokštės
 #define USE_CURRENT_METER_INA226
 #define DEFAULT_VOLTAGE_METER_SOURCE   VOLTAGE_METER_INA226
 #define DEFAULT_CURRENT_METER_SOURCE   CURRENT_METER_INA226
@@ -310,7 +321,7 @@ Nauji define'ai, kuriuos reikės pridėti:
 8. **OSD signalai:** PA20-22 vedami kartu, toliau nuo motorų PWM
 9. **SD kortelė:** 100nF prie SD VDD, ESD apsauga jei yra vietos
 10. **FRAM:** Šalia SD kortelės (dalijasi SPI0 magistrale)
-11. **INA226 + Šuntas:** Šunto rezistorius (1mΩ) kuo arčiau INA226 IN+/IN- pinų. Kelvin jungimas (4 laidai). INA226 maitinimas iš MCU 3.3V LDO (VS pin gali būti jungtas tiesiai prie baterijos, iki 36V). 100nF dekuplingas prie VS ir VDD.
+11. **INA226 + Šuntas:** Jei ant FC — šunto rezistorius (1mΩ) kuo arčiau INA226 IN+/IN- pinų, Kelvin jungimas. Jei ant PDB — jungiasi per I2C1 kabelį (PA2-PA3). VS pin iki 36V, VDD=3.3V, 100nF dekuplingas.
 
 ---
 
