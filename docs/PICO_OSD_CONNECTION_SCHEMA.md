@@ -62,15 +62,21 @@ These pins are already broken out and easily accessible.
 ### Option 1: Simple OSD Board with LM1881 Sync Separator
 
 #### Bill of Materials:
-| Component | Value | Description |
-|-----------|-------|-------------|
-| U1 | LM1881 | Sync Separator IC |
-| U2 | MAX454 or similar | Video Switch/Multiplexer |
-| C1 | 100nF | Decoupling capacitor |
-| C2 | 0.1µF | LM1881 input coupling |
-| R1 | 680kΩ | LM1881 filter resistor |
-| R2, R3 | 75Ω | Video termination |
-| R4 | 1kΩ | Level shift resistor |
+| Component | Value | LCSC Part # | Description |
+|-----------|-------|-------------|-------------|
+| U1 | LM1881M/TR | C518922 | Sync Separator IC (SOIC-8, €0.57) |
+| U1 alt | LM1881N | C518923 | Sync Separator IC (DIP-8, €0.59) - easier to solder |
+| U2 | MAX454 or similar | - | Video Switch/Multiplexer |
+| C1 | 100nF | - | Decoupling capacitor |
+| C2 | 0.1µF | - | LM1881 input coupling |
+| R1 | 680kΩ | - | LM1881 filter resistor |
+| R2, R3 | 75Ω | - | Video termination |
+| R4 | 1kΩ | - | Level shift resistor |
+
+**LM1881 Model Selection:**
+- **LM1881M/TR** (C518922) - SOIC-8, HGSEMI - Rekomenduojamas SMD montažui
+- **LM1881N** (C518923) - DIP-8, HGSEMI - Rekomenduojamas prototipavimui
+- LM1881MX/NOPB (C2649398) - TI originalas, ~5x brangiau, bet garantuota kokybė
 
 #### LM1881 Connections:
 ```
@@ -176,6 +182,8 @@ For testing OSD output without a camera:
 
 - Betaflight PR #14882: https://github.com/betaflight/betaflight/pull/14882
 - LM1881 Datasheet: https://www.ti.com/product/LM1881
+- LM1881M/TR (LCSC): https://www.lcsc.com/product-detail/C518922.html
+- LM1881N DIP-8 (LCSC): https://www.lcsc.com/product-detail/C518923.html
 - RP2350 PIO Documentation: https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf
 
 ## Version History
